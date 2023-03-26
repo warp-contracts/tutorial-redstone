@@ -1,0 +1,15 @@
+{
+  "name": "example-redstone",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:warp-contracts/example-redstone.git",
+  "author": "ppe <peter@redstone.finance>",
+  "license": "MIT",
+  "dependencies": {
+    "brain.js": "^2.0.0-beta.20",
+    "gpu.js": "^2.16.0",
+    "redstone-protocol": "^1.0.5",
+    "warp-contracts": "^1.3.2",
+    "warp-contracts-plugin-deploy": "^1.0.1"
+  }
+}
