@@ -1,10 +1,11 @@
 /* eslint-disable */
 const {defaultCacheOptions, LoggerFactory, WarpFactory} = require('warp-contracts');
+const {requestDataPackages} = require("redstone-sdk");
 const fs = require('fs');
 const path = require('path');
 const {ArweaveSigner, DeployPlugin} = require("warp-contracts-plugin-deploy");
 
-const {recurrent} = require("brain.js");
+const brain = require('brain.js');
 
 class RedStonePlugin  {
   process(input) {
@@ -17,8 +18,11 @@ class RedStonePlugin  {
 }
 
 class BrainJsPlugin {
+  constructor() {
+  }
+
   process(input) {
-    input.LSTMTimeStep = recurrent.LSTMTimeStep;
+    input.LSTMTimeStep = brain.recurrent.LSTMTimeStep;
   }
 
   type() {
@@ -28,17 +32,18 @@ class BrainJsPlugin {
 
 async function main() {
   let wallet = readJSON('./.secrets/33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA.json');
-  LoggerFactory.INST.logLevel('error');
+  // LoggerFactory.INST.logLevel('error');
+  LoggerFactory.INST.logLevel('info');
 
   try {
     const warp = WarpFactory
-      .forMainnet({...defaultCacheOptions, inMemory: true})
+      .forMainnet({...defaultCacheOptions, inMemory: false})
       .use(new DeployPlugin())
       .use(new RedStonePlugin())
       .use(new BrainJsPlugin())
 
 
-    const jsContractSrc = fs.readFileSync(path.join('./lstm-redstone.js'), 'utf8');
+    /*const jsContractSrc = fs.readFileSync(path.join('./lstm-redstone.js'), 'utf8');
 
     const {contractTxId, srcTxId} = await warp.deploy({
       wallet: new ArweaveSigner(wallet),
@@ -52,10 +57,10 @@ async function main() {
     });
 
     console.log('contractTxId:', contractTxId);
-    console.log('srcTxId:', srcTxId);
+    console.log('srcTxId:', srcTxId);*/
 
     const contract = warp
-      .contract<any>(contractTxId)
+      .contract(/*contractTxId*/"TZk31WrAGpjIUAWb8y6rU8FIAVRoEr7qcOz5uqsIda0")
       .connect(wallet);
 
     const reqParams = {
@@ -66,7 +71,6 @@ async function main() {
 
     const dataPackagesResponse = await requestDataPackages(reqParams);
     const btc = dataPackagesResponse["BTC"][0];
-
     await contract.writeInteraction({
       function: 'train',
       pricePackage: btc.toJSON(),
@@ -74,9 +78,13 @@ async function main() {
 
 
     const {cachedValue} = await contract.readState();
+    console.dir(cachedValue.state.trainData, {depth: null});
 
-    //logger.info("Result", await contract.getStorageValue('33F0QHcb22W7LwWR1iRC8Az1ntZG09XQ03YWuw2ABqA'));
-    //console.dir(cachedValue.state);
+   /* const view = await contract.viewState({
+      function: 'forecast',
+      pricePackage: btc.toJSON()
+    });
+    console.dir(view.result);*/
   } catch (e) {
     throw e;
   }
